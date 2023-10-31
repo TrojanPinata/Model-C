@@ -1,11 +1,27 @@
 #include <avr/io.h>
 #include <LedControl.h>
 
+#define COL_PORT PORTD
+#define COL_PIN PIND
+#define COL_DDR DDRD
+
+#define ROW_PORT PORTA
+#define ROW_PIN PINA
+#define ROW_DDR DDRA
+
+#define MAX7219_PORT PORTB
+#define MAX7219_DDR DDRB
+
+#define MAX7219_SS 4 
+#define MAX7219_MISO 6 
+#define MAX7219_MOSI 5 
+#define MAX7219_SCK 7 
+
 // define ports
 DDRA = 0x1F;
 DDRB = 0x00;
 DDRC = 0x00;
-DDRD = 0x01;
+DDRD = 0x0F;
 
 // define pins
 int col0 = PIND0;
@@ -22,10 +38,8 @@ int row4 = PINA4;
 double input1 = 0;
 double input2 = 0;
 int operator = 0;
-int stage = 0;
 int dotstate = 0;
 double result = 0;
-int key = -1;
 int decDivider = 1;
 
 // prototypes
@@ -35,79 +49,120 @@ double calc();
 int isOperator();
 void updateOperator();
 void clear();
+int stage0();
+int stage1();
+int stage2();
+int stageSelect(int stage);
+void initMCU();
+void initSSG();
 
 // main
 int main() {
+   int stage = 0;
    while (1) {
-      if (stage == 0) { // operand 1
-         key = checkKeys();
-         if (dotstate == 0 && key != -1) {   // default
-            input1 = (input1 * 10) + key;
-            display(input1);
-         }
-         else if (dotstate == 1 && key != -1) { // decimal place
-            decDivider = decDivider / 10;
-            input1 = input1 + (key / decDivider);
-         }
-         if (isOperator()) {  // operator has been selected, move to second input
-            updateOperator();
-            dotstate = 0;
-            stage == 1;
-         }
-         if (col3 && row4) {  // enter key pressed
-            operator = 0;
-            dotstate = 0;
-            stage = 2;
-         }
-         if (col0 && row0) {  // clear
-            clear();
-         }
-      }
-      if (stage == 1) {       // operand 2
-         key = checkKeys();
-         if (dotstate == 0 && key != -1) {         // default
-            input2 = (input2 * 10) + key;
-            display(input2);
-         }
-         else if (dotstate == 1 && key != -1) {    // decimal place
-            decDivider = decDivider / 10;
-            input2 = input2 + (key / decDivider);
-         }
-         if (isOperator()) {  // do operation on current input and do another one with a new number
-            input1 = calc();
-            updateOperator();
-            dotstate = 0;
-            input2 = 0;
-         }
-         if (col3 && row4) {  // enter - move to stage 2
-            operator = 0;
-            dotstate = 0;
-            stage = 2;
-         }
-         if (col0 && row0) {  // clear 
-            clear();
-         }
-      }
-      if (stage == 2) {
-         input1 = calc();
-         if (isOperator) { // do operation on result
-            updateOperator();
-            stage = 1;
-         }
-         if (col3 && row4) {  // repeat operation
-            input1 = calc();
-         }
-         key = checkKeys();
-         if (key != -1) {    // new key is pressed - delete previous result and reset
-            input1 = key;
-            input2 = 0;
-            operator = 0;
-            stage = 0;
-         }
-         dotstate = 0;
-      }
-      key = -1;
+      stage = stageSelect(stage);
    }
+}
+
+void initMCU() {
+   COL_DDR |= (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3);
+   ROW_DDR &= ~((1 << 0) | (1 << 1) | (1 << 2) | (1 << 3) | (1 << 4)); // Use pull-up resistors
+
+   // Set up SPI for communication with MAX7219
+   MAX7219_DDR |= (1 << MAX7219_SS) | (1 << MAX7219_MOSI) | (1 << MAX7219_SCK);
+   SPCR = (1 << SPE) | (1 << MSTR) | (1 << SPR0);
+}
+
+void initSSG() {
+   MAX7219_PORT |= (1 << MAX7219_SS);
+}
+
+int stageSelect(int stage) {
+   if (stage == 0) {
+      stage = stage0();
+   }
+   if (stage == 1) {
+      stage = stage1();
+   }
+   if (stage == 2) {
+      stage = stage2();
+   }
+   return stage;
+}
+
+int stage0() {
+   int key = checkKeys();
+   if (dotstate == 0 && key != -1) {   // default
+      input1 = (input1 * 10) + key;
+      display(input1);
+   }
+   else if (dotstate == 1 && key != -1) { // decimal place
+      decDivider = decDivider / 10;
+      input1 = input1 + (key / decDivider);
+   }
+   if (isOperator()) {  // operator has been selected, move to second input
+      updateOperator();
+      dotstate = 0;
+      return 1;
+   }
+   if (col3 && row4) {  // enter key pressed
+      operator = 0;
+      dotstate = 0;
+      return 2;
+   }
+   if (col0 && row0) {  // clear
+      clear();
+      return 1;
+   }
+   return 0
+}
+
+int stage1() {
+   int key = checkKeys();
+   if (dotstate == 0 && key != -1) {         // default
+      input2 = (input2 * 10) + key;
+      display(input2);
+   }
+   else if (dotstate == 1 && key != -1) {    // decimal place
+      decDivider = decDivider / 10;
+      input2 = input2 + (key / decDivider);
+   }
+   if (isOperator()) {  // do operation on current input and do another one with a new number
+      input1 = calc();
+      updateOperator();
+      dotstate = 0;
+      input2 = 0;
+   }
+   if (col3 && row4) {  // enter - move to stage 2
+      operator = 0;
+      dotstate = 0;
+      return 2;
+   }
+   if (col0 && row0) {  // clear 
+      clear();
+      return 0;
+   }
+   return 1;
+}
+
+int stage2() {
+   input1 = calc();
+   if (isOperator) { // do operation on result
+      updateOperator();
+      return 1;
+   }
+   if (col3 && row4) {  // repeat operation
+      input1 = calc();
+   }
+   int key = checkKeys();
+   if (key != -1) {    // new key is pressed - delete previous result and reset
+      input1 = key;
+      input2 = 0;
+      operator = 0;
+      return 0;
+   }
+   dotstate = 0;
+   return 2;
 }
 
 // display number
@@ -149,7 +204,6 @@ int checkKeys() {
    }
    if (col3 && row4) {
       dotstate = 1;
-      return -1;
    }
    return -1;
 }
@@ -199,7 +253,6 @@ void updateOperator() {
 
 // clear all registers
 void clear() {
-   stage = 0;
    input1 = 0;
    operator = 0;
    result = 0;

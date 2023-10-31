@@ -1,2 +1,2 @@
 # Model-C
-A calculator which uses mechanical switches and a ATmega32A
+A ATmega32A based calculator with mechanical switches.
