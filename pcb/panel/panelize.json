@@ -1,0 +1,27 @@
+{
+    "layout": {
+        "hspace": "2.5mm",
+        "vspace": "0.5mm",
+        "hbackbone": "2mm",
+        "vbonecut": "False",
+        "hbonecut": "False"
+    },
+    "tabs": {
+        "type": "fixed",
+        "vcount": "2",
+        "hcount": "4"
+    },
+    "cuts": {
+        "type": "mousebites",
+        "drill": "0.2mm",
+        "spacing": "0.4mm"
+    },
+    "framing": {
+        "type": "frame",
+        "vspace": "2.5mm",
+        "width": "2.5mm"
+    },
+    "post": {
+        "millradius": "1mm"
+    }
+}
