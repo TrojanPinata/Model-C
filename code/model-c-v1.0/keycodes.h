@@ -23,12 +23,14 @@
 #define NINE 73
 #define ZERO 82
 
-const uint8_t scancodes[] = {
-   NUM,   DIV,   MULT,  BACKSPACE,
-   SEVEN, EIGHT, NINE,  MINUS,
-   FOUR,  FIVE,  SIX,   PLUS,
-   ONE,   TWO,   THREE, ENTER,
-   ZERO,  DOT,   MINUS
+#define NONE 0
+
+const uint8_t keymap[5][4] = {
+   {NUM,   DIV,   MULT,  BACKSPACE},
+   {SEVEN, EIGHT, NINE,  MINUS},
+   {FOUR,  FIVE,  SIX,   PLUS},
+   {ONE,   TWO,   THREE, ENTER},
+   {ZERO,  DOT,   MINUS, NONE}
 };
 
-#endif KEYCODES_H
+#endif // KEYCODES_H
