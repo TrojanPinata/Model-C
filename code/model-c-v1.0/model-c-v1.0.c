@@ -179,6 +179,10 @@ void remove_duplicates(uint8_t keycode) {
 
 // add key to array
 void add_key(uint8_t keycode) {
+    if (keycode == SIGN) {  // convert sign into something usable by a computer 
+        keycode = MINUS;
+    }
+    
     for (uint8_t i = 0; i < 6; i++) {
         if (keys_pressed[i] == keycode) {
             return;

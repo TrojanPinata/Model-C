@@ -40,6 +40,7 @@
         "timer.h": "c",
         "stdlib.h": "c",
         "i2c.h": "c",
-        "cstdint": "c"
+        "cstdint": "c",
+        "uart.h": "c"
     }
 }

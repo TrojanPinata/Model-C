@@ -23,6 +23,8 @@
 #define NINE 73
 #define ZERO 82
 
+#define SIGN 1
+
 #define NONE 0
 
 const uint8_t keymap[5][4] = {
@@ -30,7 +32,7 @@ const uint8_t keymap[5][4] = {
    {SEVEN, EIGHT, NINE,  MINUS},
    {FOUR,  FIVE,  SIX,   PLUS},
    {ONE,   TWO,   THREE, ENTER},
-   {ZERO,  DOT,   MINUS, NONE}
+   {ZERO,  DOT,   SIGN,  NONE}
 };
 
 #endif // KEYCODES_H
