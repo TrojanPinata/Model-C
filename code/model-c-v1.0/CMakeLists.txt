@@ -30,14 +30,12 @@ include(pico_sdk_import.cmake)
 
 project(model-c-v1.0 C CXX ASM)
 
-set(PICO_USE_TINYUSB 1)
-
 # Initialise the Raspberry Pi Pico SDK
 pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(model-c-v1.0 model-c-v1.0.c usb_descriptors.c)
+add_executable(model-c-v1.0 model-c-v1.0.c calculator.c)
 
 pico_set_program_name(model-c-v1.0 "model-c-v1.0")
 pico_set_program_version(model-c-v1.0 "0.1")
@@ -48,10 +46,7 @@ pico_enable_stdio_usb(model-c-v1.0 1)
 
 # Add the standard library to the build
 target_link_libraries(model-c-v1.0
-        pico_stdlib
-        tinyusb_device 
-        tinyusb_board
-        )
+        pico_stdlib)
 
 # Add the standard include files to the build
 target_include_directories(model-c-v1.0 PRIVATE
