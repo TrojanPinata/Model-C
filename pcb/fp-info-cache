@@ -1,4 +1,4 @@
-23724084369112071
+23729327989624932
 Audio_Module
 Reverb_BTDR-1H
 Digital Reverberation Unit, http://www.belton.co.kr/inc/downfile.php?seq=17&file=pdf (footprint from http://www.uk-electronic.de/PDF/BTDR-1.pdf)
@@ -97684,6 +97684,27 @@ MK-12C02-G020
 0
 7
 7
+footprints
+RTVS_DFN1006-2_SOD882_NEX
+
+PESD3V3X1BL_315 
+0
+2
+2
+footprints
+RTVS_DFN1006-2_SOD882_NEX-L
+
+PESD3V3X1BL_315 
+0
+2
+2
+footprints
+RTVS_DFN1006-2_SOD882_NEX-M
+
+PESD3V3X1BL_315 
+0
+2
+2
 footprints2
 RNM0015A
 
