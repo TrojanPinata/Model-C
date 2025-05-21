@@ -1,4 +1,4 @@
-23720589494508234
+23729327989624932
 Audio_Module
 Reverb_BTDR-1H
 Digital Reverberation Unit, http://www.belton.co.kr/inc/downfile.php?seq=17&file=pdf (footprint from http://www.uk-electronic.de/PDF/BTDR-1.pdf)
@@ -91769,6 +91769,13 @@ Logo WEEE
 0
 0
 0
+TPS2115APW
+SOP65P640X120-8N
+
+
+0
+8
+8
 TerminalBlock
 TerminalBlock_Altech_AK300-2_P5.00mm
 Altech AK300 terminal block, pitch 5.0mm, 45 degree angled, see http://www.mouser.com/ds/2/16/PCBMETRC-24178.pdf
@@ -97677,6 +97684,34 @@ MK-12C02-G020
 0
 7
 7
+footprints
+RTVS_DFN1006-2_SOD882_NEX
+
+PESD3V3X1BL_315 
+0
+2
+2
+footprints
+RTVS_DFN1006-2_SOD882_NEX-L
+
+PESD3V3X1BL_315 
+0
+2
+2
+footprints
+RTVS_DFN1006-2_SOD882_NEX-M
+
+PESD3V3X1BL_315 
+0
+2
+2
+footprints2
+RNM0015A
+
+TPS63070RNMR 
+0
+15
+15
 hk
 14 seg
 
