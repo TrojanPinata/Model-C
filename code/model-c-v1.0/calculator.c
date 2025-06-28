@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include "pico/stdlib.h"
 
-#define NUM_DIGITS 8
+#define NUM_DIGITS 7
 
 #define COMP_A 0
 #define COMP_B 2
@@ -30,6 +30,8 @@ uint8_t operator_length = 0;
 uint8_t operandA_length = 0;
 uint8_t operandB_length = 0;
 uint8_t result_length = 0;
+
+int32_t result_int = 0;
 
 const uint8_t operator_max_length = 1;
 const uint8_t operandA_max_length = NUM_DIGITS;
@@ -184,8 +186,10 @@ void use_key(uint8_t* keys) {
    }
 
    else if (key_char == "=") {
-      char* temp = int_to_char(calculate());
-      for (uint8_t i = 0; i < len(temp); i++) {
+      result_int = calculate();
+      char* temp = int_to_char(result_int);
+      uint8_t length = sizeof(temp) / sizeof(temp[0]);
+      for (uint8_t i = 0; i < length; i++) {
          append_component(temp[i], RESULT);
       }
       fix_length();
@@ -221,7 +225,8 @@ void use_key(uint8_t* keys) {
 
             // remove previous operandA and replace with result
             clear_operation_component(COMP_A);
-            for (uint8_t i = 0; i < len(temp); i++) {
+            uint8_t length = sizeof(temp) / sizeof(temp[0]);
+            for (uint8_t i = 0; i < length; i++) {
                append_component(temp[i], COMP_C);
             }
 
@@ -248,6 +253,7 @@ void use_key(uint8_t* keys) {
       if (modifying == COMP_A) {
          if (operandA_length < operandA_max_length) {
             append_component(key_char, COMP_A);
+
          }
          // any characters past limit will bounce and the next character must be a operator
       }
@@ -261,6 +267,28 @@ void use_key(uint8_t* keys) {
       }
    }
 
+   // display processing
+   if (modifying == COMP_A) {
+      uint32_t operandA_int = atoi(operandA);
+      uint8_t operandA_int_sign = 1;
+      if (operandA_sign == NEGATIVE) {
+         operandA_int_sign = -1;
+         operandA_int = operandA_int * operandA_int_sign;
+      }
+      display_number(operandA_int);
+   }
+   else if (modifying == COMP_B) {
+      uint32_t operandB_int = atoi(operandB);
+      uint8_t operandB_int_sign = 1;
+      if (operandB_sign == NEGATIVE) {
+         operandB_int_sign = -1;
+         operandB_int = operandB_int * operandB_int_sign;
+      }
+      display_number(operandB_int);
+   }
+   else if (modifying == RESULT) {
+      display_number(result_int);
+   }
 }
 
 // change sign of operand to facillitate using negative numbers

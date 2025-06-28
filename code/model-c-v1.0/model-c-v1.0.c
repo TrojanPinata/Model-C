@@ -7,6 +7,7 @@
 
 #include "keycodes.h"
 #include "calculator.h"
+#include "display.h"
 
 
 // states
@@ -272,9 +273,15 @@ void scan_matrix() {
 int main() {
     stdio_init_all();
 
-    sleep_ms(5000);
+    //sleep_ms(5000);
+    sleep_ms(500);
+
+    display_start();
+    //test_display_2();
 
     init_state();
+
+    uint8_t iterator = 0;
     
     if (I2C_TOGGLE) {
         i2c_init(I2C_PORT, 400*1000);
@@ -289,12 +296,23 @@ int main() {
     printf("scanning\n");
     while (true) {
         if (state == CALC) {
+            // make interrupt driven keypresses later
+            scan_matrix();
             sleep_ms(50);
+
+            if (keys_pressed[0] != 0) {
+                use_key(keys_pressed);
+            }
         }
         else if (state == NUMPAD) {
+            display_numpad();
             scan_matrix();
             sleep_ms(50);
         }
+
+        /* if (keys_pressed[0] != 0) {
+            display_number_all((iterator++) % 10);
+        } */
 
         for (int i = 0; i < 6; i++) {
           printf("%d ", keys_pressed[i]);

@@ -35,7 +35,7 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(model-c-v1.0 model-c-v1.0.c calculator.c)
+add_executable(model-c-v1.0 model-c-v1.0.c calculator.c display.c keycodes.c)
 
 pico_set_program_name(model-c-v1.0 "model-c-v1.0")
 pico_set_program_version(model-c-v1.0 "0.1")

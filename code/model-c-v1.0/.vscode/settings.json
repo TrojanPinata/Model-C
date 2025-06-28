@@ -41,6 +41,9 @@
         "stdlib.h": "c",
         "i2c.h": "c",
         "cstdint": "c",
-        "uart.h": "c"
+        "uart.h": "c",
+        "display.h": "c",
+        "string_view": "c",
+        "compare": "c"
     }
 }

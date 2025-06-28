@@ -1,6 +1,8 @@
 #ifndef KEYCODES_H
 #define KEYCODES_H
 
+#include "pico/stdlib.h"
+
 // scancodes for each key
 #define NUM 69
 #define BACKSPACE 14
@@ -27,12 +29,6 @@
 
 #define NONE 0
 
-const uint8_t keymap[5][4] = {
-   {NUM,   DIV,   MULT,  BACKSPACE},
-   {SEVEN, EIGHT, NINE,  MINUS},
-   {FOUR,  FIVE,  SIX,   PLUS},
-   {ONE,   TWO,   THREE, ENTER},
-   {ZERO,  DOT,   SIGN,  NONE}
-};
+extern const uint8_t keymap[5][4];
 
 #endif // KEYCODES_H
