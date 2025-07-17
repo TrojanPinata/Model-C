@@ -78,7 +78,7 @@ void keypress_callback(uint8_t gpio, uint32_t events) {
 }
 
 void keypress_handler(void) {
-    printf("keypress handler\n");
+    //printf("keypress handler\n");
 
     //irq_set_enabled(IO_IRQ_BANK0, false); // turn off interrputs
 
@@ -298,7 +298,7 @@ int main() {
         if (state == CALC) {
             // make interrupt driven keypresses later
             scan_matrix();
-            sleep_ms(50);
+            sleep_ms(100);
 
             if (keys_pressed[0] != 0) {
                 use_key(keys_pressed);

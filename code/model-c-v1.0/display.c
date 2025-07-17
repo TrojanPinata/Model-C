@@ -3,6 +3,9 @@
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"
 
+#include <stdio.h>
+#include <string.h>
+
 #define I2C_PORT i2c0
 #define SDA_PIN 0
 #define SCL_PIN 1
@@ -22,8 +25,10 @@ void display_numpad();
 void display_number(int32_t num);
 void test_display_2();
 void display_error();
-uint8_t count_digits(int32_t num);
 uint8_t check_negative(int32_t num);
+void display_float(float num);
+uint8_t count_digits_float(float num);
+
 
 // 00000pgfedcba000
 const uint16_t digits[11] = {
@@ -146,23 +151,6 @@ void display_numpad() {
    }
 }
 
-uint8_t count_digits(int32_t num) {
-   if (num < 0) {
-      num = -num;
-   }
-
-   if (num == 0) {
-      return 1;
-   }
-
-   uint8_t digits = 0;
-   while (num > 0) {
-      num /= 10;
-      digits++;
-   }
-   return digits;
-}
-
 uint8_t check_negative(int32_t num) {
    if (num < 0) {
       return 0;
@@ -201,4 +189,68 @@ void display_number(int32_t num) {
          display_abstraction(length, DASH);
       }
    }
+}
+
+// I don't know if I am going to use this yet, but I would like to be able to do float math
+void display_float(float num) {
+   uint8_t dig = count_digits_float(num);
+   char buf[16];
+   snprintf(buf, sizeof(buf), "%.*f", (7 - dig), num);
+
+   ht16k33_clear();
+
+   int len = strlen(buf);
+   if (len > 8) {
+      display_error();
+      return;
+   }
+
+   int disp_pos = 0;
+
+   for (int i = len - 1; i >= 0 && disp_pos < 8; i--) {
+      char c = buf[i];
+
+      if (c >= '0' && c <= '9') {
+         uint16_t segs = digits[c - '0'];
+
+         // Check if next character is '.', set decimal bit on this digit
+         if (i < len - 1 && buf[i + 1] == '.') {
+            segs |= dec_mask;
+         }
+
+         ht16k33_write_digit_16bit(7 - disp_pos, segs);
+         disp_pos++;
+      } 
+      else if (c == '-') {
+         ht16k33_write_digit_16bit(7 - disp_pos, digits[10]);
+         disp_pos++;
+      } 
+      else if (c == '.') {
+         continue; 
+      } 
+      else {
+         display_error();
+         return;
+      }
+   }
+}
+
+// count number of digits in a float - don't worry about decimal, prefer integers, then show precision after
+uint8_t count_digits_float(float num) {
+   if (num < 0) {
+      num = -num;
+   }
+
+   int32_t num_new = (int32_t)num;
+
+   if (num_new == 0) {
+      return 1;
+   }
+
+   uint8_t digits = 0;
+   while (num_new > 0) {
+      num_new /= 10;
+      digits++;
+   }
+   return digits;
 }

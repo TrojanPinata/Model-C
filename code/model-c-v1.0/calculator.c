@@ -13,16 +13,15 @@
 #define RESULT 3
 #define ERROR  4
 
-char operator[1] = " ";    // COMP_C
-char operandA[8] = {" "};  // COMP_A
-char operandB[8] = {" "};  // COMP_B
-char result[8] = {" "};  // RESULT
+#define PLUS_OP   0
+#define MINUS_OP  1
+#define MULT_OP   2
+#define DIV_OP    3
 
-#define POSITIVE true
-#define NEGATIVE false
-
-bool operandA_sign = POSITIVE;
-bool operandB_sign = POSITIVE;
+uint8_t operator = PLUS_OP;
+int32_t operandA = 0;
+int32_t operandB = 0;
+float result     = 0.0;
 
 bool error_flag = false;
 
@@ -33,102 +32,88 @@ uint8_t result_length = 0;
 
 int32_t result_int = 0;
 
-const uint8_t operator_max_length = 1;
-const uint8_t operandA_max_length = NUM_DIGITS;
-const uint8_t operandB_max_length = NUM_DIGITS;
-const uint8_t result_max_length = NUM_DIGITS;
-
 uint8_t modifying = COMP_A;
 
 // prototypes
-uint32_t calculate();
+float calculate();
 void clear_operation_component(uint8_t component);
 void clear_operation();
-void append_component(char key, uint8_t component);
+void change_sign(uint8_t component);
+void update_operator(uint8_t new_op);
+void append_component(uint8_t digit, uint8_t component);
 void pop_component(uint8_t component);
+uint8_t count_digits(int32_t num);
 void use_key(uint8_t* keys);
-char* int_to_char(uint32_t val);
 char parse_keycode(uint8_t keycode);
-uint8_t fix_length();
 
 // clear specific field of operation
 void clear_operation_component(uint8_t component) { 
    switch (component) {
       case COMP_A:
-         operandA_length = 0;
-         for (uint8_t i = 0; i < operandA_max_length; i++) {
-            operandA[i] = " ";
-         }
+         operandA = 0;
          break;
 
       case COMP_B:
-         operandB_length = 0;
-         for (uint8_t i = 0; i < operandB_max_length; i++) {
-            operandB[i] = " ";
-         }
+         operandB = 0;
          break;
 
       case COMP_C:
-         operator_length = 0;
-         operator[0] = " ";
+         operator = PLUS_OP;
          break;
 
       case RESULT:
-         result_length = 0;
-         for (uint8_t i = 0; i < result_max_length; i++) {
-            result[i] = " ";
-         }
+         result = 0;
          break;
    }
 }
 
 // clear all fields of operation
 void clear_operation() {
-   operator_length = 0;
-   operandA_length = 0;
-   operandB_length = 0;
-
-   operator[0] = " ";
-   for (uint8_t i = 0; i < NUM_DIGITS; i++) {
-      operandA[i] = " ";
-      operandB[i] = " ";
-      result[i] = " ";
-   }
+   operandA = 0;
+   operandB = 0;
+   operator = PLUS_OP;
+   result = 0;
    error_flag = false;
-
    modifying = COMP_A;
 }
 
+// change sign of operand to facillitate using negative numbers
+void change_sign(uint8_t component) {
+   if (component == COMP_A) {
+      operandA = -operandA;
+   }
+   else if (component == COMP_B) {
+      operandB = -operandB;
+      printf("changing sign\n");
+   }
+}
+
 // append character to operation component field
-void append_component(char key, uint8_t component) {
+void append_component(uint8_t digit, uint8_t component) {
    switch (component) {
       case COMP_A:
-         if (operandA_length < operandA_max_length) {
-            operandA[operandA_length] = key;
-            operandA_length++;
-         }
+         operandA = (operandA * 10) + digit;
          break;
 
       case COMP_B:
-         if (operandB_length < operandB_max_length) {
-            operandB[operandB_length] = key;
-            operandB_length++;
-         }
+         operandB = (operandB * 10) + digit;
          break;
+   }
+}
 
-      case COMP_C:
-         if (operator_length < operator_max_length) {
-            operator[operator_length] = key;
-            operator_length++;
-         }
-         break;
-
-      case RESULT:
-         if (result_length < result_max_length) {
-            result[result_length] = key;
-            result_length++;
-         }
-         break;
+// function for changing operator
+void update_operator(uint8_t new_op) {
+   if (new_op == '+') {
+      operator = PLUS_OP;
+   }
+   else if (new_op == '-') {
+      operator = MINUS_OP;
+   }
+   else if (new_op == '*') {
+      operator = MULT_OP;
+   }
+   else if (new_op == '/') {
+      operator = DIV_OP;
    }
 }
 
@@ -136,30 +121,54 @@ void append_component(char key, uint8_t component) {
 void pop_component(uint8_t component) {
    switch (component) {
       case COMP_A:
-         if (operandA_length > 0) {
-            operandA[operandA_length] = " ";
-            operandA_length--;
-         }
+         operandA = operandA / 10;
          break;
 
       case COMP_B:
-         if (operandB_length > 0) {
-            operandB[operandB_length] = " ";
-            operandB_length--;
-         }
+         operandB = operandB / 10;
          break;
    }
+}
+
+// count number of digits in a int
+uint8_t count_digits(int32_t num) {
+   if (num < 0) {
+      num = -num;
+   }
+
+   if (num == 0) {
+      return 1;
+   }
+
+   uint8_t digits = 0;
+   while (num > 0) {
+      num /= 10;
+      digits++;
+   }
+   return digits;
 }
 
 // primary handler for key logic
 void use_key(uint8_t* keys) {
    char key_char = parse_keycode(keys[0]);
+   printf("char %c", key_char);
+   printf("\n");
+   printf("mod %d", modifying);
+   printf("\n");
+   printf("operandA %d", operandA);
+   printf("\n");
+   printf("operandB %d", operandB);
+   printf("\n");
+   printf("operator %d", operator);
+   printf("\n");
+   printf("result %f", result);
+   printf("\n");
    if (key_char == 'B') {
       if (modifying == COMP_A) {
          pop_component(COMP_A);
       }
       else if (modifying == COMP_B) {
-         if (operandB_length == 0) {
+         if (operandB == 0) {
             clear_operation_component(COMP_C);
             modifying = COMP_A;
          }
@@ -174,10 +183,10 @@ void use_key(uint8_t* keys) {
 
    else if (key_char == 'S') {
       if (modifying == COMP_A) {
-         operandA_sign = !operandA_sign;
+         change_sign(COMP_A);
       }
       else if (modifying == COMP_B) {
-         operandB_sign = !operandB_sign;
+         change_sign(COMP_B);
       }
    }
 
@@ -185,222 +194,114 @@ void use_key(uint8_t* keys) {
       clear_operation();
    }
 
-   else if (key_char == "=") {
-      result_int = calculate();
-      char* temp = int_to_char(result_int);
-      uint8_t length = sizeof(temp) / sizeof(temp[0]);
-      for (uint8_t i = 0; i < length; i++) {
-         append_component(temp[i], RESULT);
-      }
-      fix_length();
-
+   else if (key_char == 'E') {
+      result = calculate();
       modifying = RESULT;  // this is the only time this state should be used
-      clear_operation();
    }
 
    else if (key_char == '+' || key_char == '-' || key_char == '*' || key_char == '/') {
       // pressing a operator when on operandA screen, but no characters there
       if (modifying == COMP_A) {
-         if (operandA_length == 0) {
-            append_component('0', COMP_A);
+         if (operandA == 0) {
+            append_component(0, COMP_A);
          }
          // pressing operator while on operandA screen
-         else {
-            append_component(key_char, COMP_C);
-            // call display here
-            modifying = COMP_B;
-         }
-         
+         update_operator(key_char);
+         modifying = COMP_C;
       }
       else if (modifying == COMP_B) {
          // pressing a operator when on operatorB scren (technically impossible)
-         if (operandA_length == 0) {   // replace operator if nothing typed in operandB yet
-            clear_operation_component(COMP_C);
-            append_component(key_char, COMP_C);
+         if (operandA == 0) {   // replace operator if nothing typed in operandB yet
+            update_operator(key_char);
          }
 
          // pressing a operator when on operandB
          else {
-            char* temp = int_to_char(calculate());
-
-            // remove previous operandA and replace with result
-            clear_operation_component(COMP_A);
-            uint8_t length = sizeof(temp) / sizeof(temp[0]);
-            for (uint8_t i = 0; i < length; i++) {
-               append_component(temp[i], COMP_C);
-            }
-
+            operandA = calculate();
+            update_operator(key_char);
             clear_operation_component(COMP_B);
-            fix_length();
-            append_component(key_char, COMP_C);
-
-            modifying = COMP_B;
+            modifying = COMP_C;
          }
       }
 
       // when you press a operator on the results screen
       else if (modifying == RESULT) {
-         for (uint8_t i = 0; i < NUM_DIGITS; i++) {
-            append_component(result[i], COMP_A);
-         }
-         fix_length();
-         append_component(key_char, COMP_C);
-         modifying = COMP_B;
+         operandA = result;
+         update_operator(key_char);
+         modifying = COMP_C;
       }
    }
 
+   // number
    else {
+      uint8_t length = 0;
       if (modifying == COMP_A) {
-         if (operandA_length < operandA_max_length) {
-            append_component(key_char, COMP_A);
-
+         length = count_digits(operandA);
+         if (length < 7) {
+            append_component(atoi(&key_char), COMP_A);
          }
          // any characters past limit will bounce and the next character must be a operator
       }
       else if (modifying == COMP_B) {
-         if (operandB_length < operandB_max_length) {
-            append_component(key_char, COMP_B);
+         length = count_digits(operandB);
+         if (length < 7) {
+            append_component(atoi(&key_char), COMP_B);
          }
       }
-      else {
-         // do nothing if putting a number where a operator should be
+      else if (modifying == COMP_C) {
+         modifying = COMP_B;
+         length = count_digits(operandB);
+         if (length < 7) {
+            append_component(atoi(&key_char), COMP_B);
+         }
       }
    }
 
    // display processing
    if (modifying == COMP_A) {
-      uint32_t operandA_int = atoi(operandA);
-      uint8_t operandA_int_sign = 1;
-      if (operandA_sign == NEGATIVE) {
-         operandA_int_sign = -1;
-         operandA_int = operandA_int * operandA_int_sign;
-      }
-      display_number(operandA_int);
+      display_number(operandA);
    }
    else if (modifying == COMP_B) {
-      uint32_t operandB_int = atoi(operandB);
-      uint8_t operandB_int_sign = 1;
-      if (operandB_sign == NEGATIVE) {
-         operandB_int_sign = -1;
-         operandB_int = operandB_int * operandB_int_sign;
-      }
-      display_number(operandB_int);
+      display_number(operandB);
    }
    else if (modifying == RESULT) {
-      display_number(result_int);
-   }
-}
-
-// change sign of operand to facillitate using negative numbers
-void change_sign(bool sign, uint8_t component) {
-   if (component == COMP_A) {
-      if (sign) {
-         operandA_sign = POSITIVE;
-      }
-      else {
-         operandA_sign = NEGATIVE;
-      }
-   }
-   else if (component == COMP_B) {
-      if (sign) {
-         operandB_sign = POSITIVE;
-      }
-      else {
-         operandB_sign = NEGATIVE;
-      }
+      display_float(result);
    }
 }
 
 // calculate result using operation components specified
-uint32_t calculate() {
-   uint32_t operandA_int = atoi(operandA);
-   uint32_t operandB_int = atoi(operandB);
+float calculate() {
+   float operandA_working = (float)operandA;
+   float operandB_working = (float)operandB;
 
-   uint8_t operandA_int_sign = 1;
-   uint8_t operandB_int_sign = 1;
+   printf("calculating \n");
+   printf("%f", operandA_working);
+   printf("\n");
+   printf("%f", operandB_working);
+   printf("\n");
+   printf("%f", operandA_working + operandB_working);
+   printf("\n");
 
-   if (operandA_sign == NEGATIVE) {
-      operandA_int_sign = -1;
-      operandA_int = operandA_int * operandA_int_sign;
+   if (operator == PLUS_OP) {
+      return operandA_working + operandB_working;
    }
-   if (operandB_sign == NEGATIVE) {
-      operandB_int_sign = -1;
-      operandB_int = operandB_int * operandB_int_sign;
+   else if (operator == MINUS_OP) {
+      return operandA_working - operandB_working;
    }
-
-   if (operator[0] == "+") {
-      return operandA_int + operandB_int;
+   else if (operator == MULT_OP) {
+      return operandA_working * operandB_working;
    }
-   else if (operator[0] == "-") {
-      return operandA_int - operandB_int;
-   }
-   else if (operator[0] == "*") {
-      return operandA_int * operandB_int;
-   }
-   else if (operator[0] == "/") {
+   else if (operator == DIV_OP) {
       if (operandB == 0) {
          error_flag = true;
          modifying = ERROR;
-         return 0;
+         return 0.0;
       }
       else {
-         return operandA_int / operandB_int;
+         return operandA_working / operandB_working;
       }
    }
-
-}
-
-// convert integer to character array
-char* int_to_char(uint32_t val) {
-   uint8_t digit = 0;
-   uint32_t num = val;
-   while (num) {
-      digit++;
-      num /= 10;
-   }
-   char* array;
-   char arr1[digit];
-
-   int index = 0;
-   while (val) {
-      arr1[++index] = val % 10 + '0';
-      val /= 10;
-   }
-
-   int i;
-   for (i = 0; i < index; i++) {
-      array[i] = arr1[index - i];
-   }
-
-   array[i] = '\0';
-   return (char*)array;
-}
-
-// ensure the length of the character arrays match the number of used slots
-uint8_t fix_length() {
-   for (uint8_t i = 0; i < operandA_max_length; i++) {
-      if (operandA[i] != " ") {
-         operandA_length++;
-      }
-   }
-
-   for (uint8_t i = 0; i < operandB_max_length; i++) {
-      if (operandB[i] != " ") {
-         operandB_length++;
-      }
-   }
-
-   for (uint8_t i = 0; i < operator_max_length; i++) {
-      if (operator[i] != " ") {
-         operator_length++;
-      }
-   }
-
-   for (uint8_t i = 0; i < result_max_length; i++) {
-      if (result[i] != " ") {
-         result_length++;
-      }
-   }
+   return 0.0;
 }
 
 // parse keycodes to characters
@@ -432,7 +333,7 @@ char parse_keycode(uint8_t keycode) {
          return 'B';
 
       case ENTER:
-         return '=';
+         return 'E';
 
       // numbers
       case ONE:
@@ -469,3 +370,5 @@ char parse_keycode(uint8_t keycode) {
          return '_';
    }
 }
+
+
